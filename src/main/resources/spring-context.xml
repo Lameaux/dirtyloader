@@ -18,12 +18,18 @@
 	<context:property-placeholder location="classpath:config.properties"/>
 	
 	<bean id="config" class="com.euromoby.dirty.Config">
-		<property name="taskPoolSize" value="${books.task.pool}" />
-		<property name="taskQueueSize" value="${books.task.queue}" />
-		<property name="taskRetry" value="${books.task.retry}" />
-		<property name="location" value="${books.location}" />				
-		<property name="destination" value="${books.destination}" />	
-		<property name="extension" value="${books.extension}" />
+		<property name="clientTimeout" value="${dirty.client.timeout}" />
+		<property name="proxyHost" value="${dirty.proxy.host}" />
+		<property name="proxyPort" value="${dirty.proxy.port}" />
+		<property name="httpUserAgent" value="${dirty.http.useragent}" />
+		
+		<property name="phantomJsLocation" value="${dirty.phantomjs}" />
+		<property name="relayJsLocation" value="${dirty.relayjs}" />
+		
+		<property name="taskPoolSize" value="${dirty.task.pool}" />
+		<property name="taskQueueSize" value="${dirty.task.queue}" />
+		<property name="taskRetry" value="${dirty.task.retry}" />
+		<property name="destination" value="${dirty.destination}" />	
 	</bean>
 
     <tx:annotation-driven proxy-target-class="true" transaction-manager="transactionManager" />
