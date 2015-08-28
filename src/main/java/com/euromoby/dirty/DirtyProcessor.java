@@ -56,8 +56,8 @@ public class DirtyProcessor {
 	public void startProcessing() throws IOException {
 		pool.prestartAllCoreThreads();
 
-		int startId = 1;
-		int endId = 20;
+		int startId = config.getStartId();
+		int endId = config.getEndId();
 		for (int id = startId; id <= endId; id++) {
 			Video video = dirtyManager.findVideoById(id);
 			if (video == null) {

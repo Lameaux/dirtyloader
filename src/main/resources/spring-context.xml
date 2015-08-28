@@ -27,7 +27,10 @@
 		<property name="ffmpegLocation" value="${dirty.ffmpeg}" />
 
 		<property name="ffmpegThumbnailsCount" value="${dirty.thumbnails}" />
-				
+
+		<property name="startId" value="${dirty.id.start}" />
+		<property name="endId" value="${dirty.id.end}" />
+						
 		<property name="taskPoolSize" value="${dirty.task.pool}" />
 		<property name="taskQueueSize" value="${dirty.task.queue}" />
 		<property name="taskRetry" value="${dirty.task.retry}" />

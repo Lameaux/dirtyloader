@@ -11,6 +11,9 @@ public class Config {
 	private int taskQueueSize;
 	private int taskRetry;
 
+	private int startId;
+	private int endId;
+
 	private String destination;
 
 	private String phantomJsLocation;
@@ -105,6 +108,22 @@ public class Config {
 
 	public void setFfmpegThumbnailsCount(int ffmpegThumbnailsCount) {
 		this.ffmpegThumbnailsCount = ffmpegThumbnailsCount;
+	}
+
+	public int getStartId() {
+		return startId;
+	}
+
+	public void setStartId(int startId) {
+		this.startId = startId;
+	}
+
+	public int getEndId() {
+		return endId;
+	}
+
+	public void setEndId(int endId) {
+		this.endId = endId;
 	}
 
 }
