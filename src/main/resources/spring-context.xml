@@ -24,10 +24,14 @@
 		
 		<property name="phantomJsLocation" value="${dirty.phantomjs}" />
 		<property name="relayJsLocation" value="${dirty.relayjs}" />
-		
+		<property name="ffmpegLocation" value="${dirty.ffmpeg}" />
+
+		<property name="ffmpegThumbnailsCount" value="${dirty.thumbnails}" />
+				
 		<property name="taskPoolSize" value="${dirty.task.pool}" />
 		<property name="taskQueueSize" value="${dirty.task.queue}" />
 		<property name="taskRetry" value="${dirty.task.retry}" />
+
 		<property name="destination" value="${dirty.destination}" />	
 	</bean>
 

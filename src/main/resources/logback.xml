@@ -8,7 +8,10 @@
 			</pattern>
 		</encoder>
 	</appender>
-	
+
+	<logger name="org.apache.http.impl.execchain">
+		<level value="ERROR" />
+	</logger>	
 	<logger name="com.mchange">
 		<level value="INFO" />
 	</logger>

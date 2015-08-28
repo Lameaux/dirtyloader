@@ -3,7 +3,6 @@ package com.euromoby.dirty.http;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpHost;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -16,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.euromoby.dirty.Config;
-import com.euromoby.dirty.model.Tuple;
 
 
 
@@ -42,17 +40,14 @@ public class HttpClientProvider implements DisposableBean {
 				.build();
 	}
 
-	public RequestConfig.Builder createRequestConfigBuilder(Tuple<String, Integer> proxy) {
+	public RequestConfig.Builder createRequestConfigBuilder() {
 		
 		int timeout = config.getClientTimeout();
 		
 		RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 		requestConfigBuilder.setSocketTimeout(timeout);
 		requestConfigBuilder.setConnectTimeout(timeout);
-		
-		if (proxy != null) {
-			requestConfigBuilder.setProxy(new HttpHost(proxy.getFirst(), proxy.getSecond()));
-		}
+		//requestConfigBuilder.setProxy(new HttpHost(proxyInfo[0], Integer.valueOf(proxyInfo[1])));
 		return requestConfigBuilder;
 	}
 

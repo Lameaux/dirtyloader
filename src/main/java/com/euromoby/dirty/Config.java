@@ -10,10 +10,14 @@ public class Config {
 	private int taskPoolSize;
 	private int taskQueueSize;
 	private int taskRetry;
+
 	private String destination;
 
 	private String phantomJsLocation;
 	private String relayJsLocation;
+	private String ffmpegLocation;
+
+	private int ffmpegThumbnailsCount;
 
 	public int getTaskPoolSize() {
 		return taskPoolSize;
@@ -85,6 +89,22 @@ public class Config {
 
 	public void setRelayJsLocation(String relayJsLocation) {
 		this.relayJsLocation = relayJsLocation;
+	}
+
+	public String getFfmpegLocation() {
+		return ffmpegLocation;
+	}
+
+	public void setFfmpegLocation(String ffmpegLocation) {
+		this.ffmpegLocation = ffmpegLocation;
+	}
+
+	public int getFfmpegThumbnailsCount() {
+		return ffmpegThumbnailsCount;
+	}
+
+	public void setFfmpegThumbnailsCount(int ffmpegThumbnailsCount) {
+		this.ffmpegThumbnailsCount = ffmpegThumbnailsCount;
 	}
 
 }
