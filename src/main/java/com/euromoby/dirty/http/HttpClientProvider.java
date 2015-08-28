@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.euromoby.dirty.Config;
-import com.euromoby.dirty.utils.StringUtils;
+import com.euromoby.dirty.model.Tuple;
 
 
 
@@ -42,7 +42,7 @@ public class HttpClientProvider implements DisposableBean {
 				.build();
 	}
 
-	public RequestConfig.Builder createRequestConfigBuilder() {
+	public RequestConfig.Builder createRequestConfigBuilder(Tuple<String, Integer> proxy) {
 		
 		int timeout = config.getClientTimeout();
 		
@@ -50,8 +50,8 @@ public class HttpClientProvider implements DisposableBean {
 		requestConfigBuilder.setSocketTimeout(timeout);
 		requestConfigBuilder.setConnectTimeout(timeout);
 		
-		if (!StringUtils.nullOrEmpty(config.getProxyHost())) {
-			requestConfigBuilder.setProxy(new HttpHost(config.getProxyHost(), config.getProxyPort()));
+		if (proxy != null) {
+			requestConfigBuilder.setProxy(new HttpHost(proxy.getFirst(), proxy.getSecond()));
 		}
 		return requestConfigBuilder;
 	}

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.euromoby.dirty.http.HttpClientProvider;
+import com.euromoby.dirty.http.ProxyList;
 
 @Component
 public class DirtyProcessor {
@@ -20,15 +21,17 @@ public class DirtyProcessor {
 	private Config config;
 	private DirtyManager dirtyManager;
 	private HttpClientProvider httpClientProvider;
+	private ProxyList proxyList;
 	
 	private LinkedBlockingQueue<Runnable> queue;
 	private ThreadPoolExecutor pool;
 
 	@Autowired
-	public DirtyProcessor(Config config, DirtyManager dirtyManager, HttpClientProvider httpClientProvider) {
+	public DirtyProcessor(Config config, DirtyManager dirtyManager, HttpClientProvider httpClientProvider, ProxyList proxyList) {
 		this.config = config;
 		this.dirtyManager = dirtyManager;
 		this.httpClientProvider = httpClientProvider;
+		this.proxyList = proxyList;
 
 		queue = new LinkedBlockingQueue<Runnable>(config.getTaskQueueSize());
 		pool = new ThreadPoolExecutor(config.getTaskPoolSize(), config.getTaskPoolSize(), 0L, TimeUnit.MILLISECONDS, queue);
@@ -55,7 +58,7 @@ public class DirtyProcessor {
 		String url = "";
 		Integer id = 1;
 
-		pool.submit(new DirtyWorker(dirtyManager, url, id, config, httpClientProvider));
+		pool.submit(new DirtyWorker(dirtyManager, url, id, config, httpClientProvider, proxyList));
 
 		pool.shutdown();
 		try {

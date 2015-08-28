@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,8 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.euromoby.dirty.http.HttpClientProvider;
+import com.euromoby.dirty.http.ProxyList;
+import com.euromoby.dirty.model.Tuple;
 import com.euromoby.dirty.utils.PathUtils;
 import com.euromoby.dirty.utils.ShellExecutor;
+import com.euromoby.dirty.utils.StringUtils;
 
 public class DirtyWorker implements Runnable {
 
@@ -37,30 +42,48 @@ public class DirtyWorker implements Runnable {
 	private Integer id;
 	private Config config;
 	private HttpClientProvider httpClientProvider;
+	private ProxyList proxyList;	
 
-	public DirtyWorker(DirtyManager dirtyManager, String url, Integer id, Config config, HttpClientProvider httpClientProvider) {
+	public DirtyWorker(DirtyManager dirtyManager, String url, Integer id, Config config, HttpClientProvider httpClientProvider, ProxyList proxyList) {
 		this.dirtyManager = dirtyManager;
 		this.url = url;
 		this.id = id;
 		this.config = config;
 		this.httpClientProvider = httpClientProvider;
+		this.proxyList = proxyList;
 	}
 
 	@Override
 	public void run() {
 		log.info("{} -> {}", id, url);
 
+		Tuple<String, Integer> proxy = proxyList.getProxy();
+
+		if (proxy != null) {
+			log.info("Using proxy " + proxy.joinString(":"));
+		}
+		
 		try {
 
 			// find real video url
 			if (url.contains("/embed")) {
-				url = findVideoPageUrl();
+				url = findVideoPageUrl(proxy);
 				log.info("{} -> {}", id, url);
 			}
 
 			ShellExecutor shellExecutor = new ShellExecutor();
-			String[] command = new String[] { config.getPhantomJsLocation(), config.getRelayJsLocation(), url };
-			String pageContent = shellExecutor.executeCommandLine(command, PJS_TIMEOUT);
+			List<String> command = new ArrayList<String>();
+			command.add(config.getPhantomJsLocation());
+			if (proxy != null) {
+				command.add("--proxy=" + proxy.joinString(":"));
+			}
+			command.add(config.getRelayJsLocation());
+			command.add(url);
+			
+			String pageContent = shellExecutor.executeCommandLine(command.toArray(new String[]{}), PJS_TIMEOUT);
+			if (StringUtils.nullOrEmpty(pageContent)) {
+				throw new Exception("Empty content");
+			}
 
 			Matcher m = VIDEO_SRC_PATTERN.matcher(pageContent);
 			if (!m.find()) {
@@ -71,15 +94,15 @@ public class DirtyWorker implements Runnable {
 			File videoFile = new File(config.getDestination(), PathUtils.generatePath("video", id, ".mp4"));
 			videoFile.getParentFile().mkdirs();
 
-			downloadUrl(videoUrl, videoFile);
+			downloadUrl(videoUrl, videoFile, proxy);
 
 		} catch (Exception e) {
 			log.error("Error processing " + url, e);
 		}
 	}
 
-	private String findVideoPageUrl() throws IOException {
-		byte[] embedBytes = getUrl(url);
+	private String findVideoPageUrl(Tuple<String, Integer> proxy) throws IOException {
+		byte[] embedBytes = getUrl(url, proxy);
 		String embedPage = new String(embedBytes, "UTF-8");
 
 		Matcher m = A_HREF_PATTERN.matcher(embedPage);
@@ -90,10 +113,10 @@ public class DirtyWorker implements Runnable {
 		throw new IOException("Video URL was not found");
 	}
 
-	private byte[] getUrl(String url) throws IOException {
+	private byte[] getUrl(String url, Tuple<String, Integer> proxy) throws IOException {
 
 		HttpGet request = new HttpGet(url);
-		RequestConfig.Builder requestConfigBuilder = httpClientProvider.createRequestConfigBuilder();
+		RequestConfig.Builder requestConfigBuilder = httpClientProvider.createRequestConfigBuilder(proxy);
 		request.setConfig(requestConfigBuilder.build());
 		CloseableHttpResponse response = httpClientProvider.executeRequest(request);
 		try {
@@ -112,12 +135,12 @@ public class DirtyWorker implements Runnable {
 		}
 	}
 
-	private void downloadUrl(String url, File file) throws IOException {
+	private void downloadUrl(String url, File file, Tuple<String, Integer> proxy) throws IOException {
 
 		log.info("Downloading video {} {}", file.getName(), url);
 
 		HttpGet request = new HttpGet(url);
-		RequestConfig.Builder requestConfigBuilder = httpClientProvider.createRequestConfigBuilder();
+		RequestConfig.Builder requestConfigBuilder = httpClientProvider.createRequestConfigBuilder(proxy);
 		request.setConfig(requestConfigBuilder.build());
 		CloseableHttpResponse response = httpClientProvider.executeRequest(request);
 		try {

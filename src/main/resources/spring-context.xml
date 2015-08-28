@@ -19,8 +19,7 @@
 	
 	<bean id="config" class="com.euromoby.dirty.Config">
 		<property name="clientTimeout" value="${dirty.client.timeout}" />
-		<property name="proxyHost" value="${dirty.proxy.host}" />
-		<property name="proxyPort" value="${dirty.proxy.port}" />
+		<property name="proxyList" value="${dirty.proxy.list}" />
 		<property name="httpUserAgent" value="${dirty.http.useragent}" />
 		
 		<property name="phantomJsLocation" value="${dirty.phantomjs}" />

@@ -4,15 +4,14 @@ public class Config {
 	public static final String DEFAULT_HTTP_USERAGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
 
 	private int clientTimeout;
-	private String proxyHost;
-	private int proxyPort;
+	private String proxyList;
 	private String httpUserAgent = DEFAULT_HTTP_USERAGENT;
 
 	private int taskPoolSize;
 	private int taskQueueSize;
 	private int taskRetry;
 	private String destination;
-	
+
 	private String phantomJsLocation;
 	private String relayJsLocation;
 
@@ -56,20 +55,12 @@ public class Config {
 		this.clientTimeout = clientTimeout;
 	}
 
-	public String getProxyHost() {
-		return proxyHost;
+	public String getProxyList() {
+		return proxyList;
 	}
 
-	public void setProxyHost(String proxyHost) {
-		this.proxyHost = proxyHost;
-	}
-
-	public int getProxyPort() {
-		return proxyPort;
-	}
-
-	public void setProxyPort(int proxyPort) {
-		this.proxyPort = proxyPort;
+	public void setProxyList(String proxyList) {
+		this.proxyList = proxyList;
 	}
 
 	public String getHttpUserAgent() {
