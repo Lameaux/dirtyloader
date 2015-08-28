@@ -46,7 +46,6 @@ public class DirtyWorker implements Runnable {
 
 	@Override
 	public void run() {
-		log.info("{} -> {}", id, url);
 		
 		VideoFile videoFile = dirtyManager.findVideoFileById(id);
 		if (videoFile == null) {
@@ -61,12 +60,13 @@ public class DirtyWorker implements Runnable {
 		
 		try {
 
+			log.info("{} -> {}", id, url);
 			// find real video url
 			if (url.contains("/embed")) {
 				url = findVideoPageUrl();
 				log.info("{} -> {}", id, url);
 			}
-
+			
 			ShellExecutor shellExecutor = new ShellExecutor();
 			List<String> command = new ArrayList<String>();
 			command.add(config.getPhantomJsLocation());
