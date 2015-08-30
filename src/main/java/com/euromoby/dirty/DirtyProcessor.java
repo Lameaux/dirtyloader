@@ -1,6 +1,8 @@
 package com.euromoby.dirty;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 import com.euromoby.dirty.ffmpeg.Ffmpeg;
 import com.euromoby.dirty.http.HttpClientProvider;
 import com.euromoby.dirty.model.Video;
+import com.euromoby.dirty.utils.StringUtils;
 
 @Component
 public class DirtyProcessor {
@@ -56,9 +59,24 @@ public class DirtyProcessor {
 	public void startProcessing() throws IOException {
 		pool.prestartAllCoreThreads();
 
-		int startId = config.getStartId();
-		int endId = config.getEndId();
-		for (int id = startId; id <= endId; id++) {
+		List<Integer> idListToProcess = new ArrayList<Integer>();
+		
+		if (!StringUtils.nullOrEmpty(config.getListId())) {
+			String[] idStrings = config.getListId().split(",");
+			for (String idString : idStrings) {
+				idListToProcess.add(Integer.valueOf(idString));
+			}
+		}
+		
+		if (idListToProcess.isEmpty()) {
+			int startId = config.getStartId();
+			int endId = config.getEndId();
+			for (int id = startId; id <= endId; id++) {
+				idListToProcess.add(id);
+			}
+		}
+		
+		for (Integer id : idListToProcess) {
 			Video video = dirtyManager.findVideoById(id);
 			if (video == null) {
 				continue;

@@ -14,6 +14,7 @@ public class Config {
 
 	private int startId;
 	private int endId;
+	private String listId;
 
 	private String destination;
 
@@ -133,6 +134,14 @@ public class Config {
 
 	public void setEndId(int endId) {
 		this.endId = endId;
+	}
+
+	public String getListId() {
+		return listId;
+	}
+
+	public void setListId(String listId) {
+		this.listId = listId;
 	}
 
 }

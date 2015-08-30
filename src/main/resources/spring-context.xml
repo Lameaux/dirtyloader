@@ -31,7 +31,8 @@
 
 		<property name="startId" value="${dirty.id.start}" />
 		<property name="endId" value="${dirty.id.end}" />
-						
+		<property name="listId" value="${dirty.id.list}" />
+								
 		<property name="taskPoolSize" value="${dirty.task.pool}" />
 		<property name="taskQueueSize" value="${dirty.task.queue}" />
 		<property name="taskRetry" value="${dirty.task.retry}" />

@@ -24,8 +24,12 @@ public class DirtyWorker implements Runnable {
 
 	private static final Logger log = LoggerFactory.getLogger(DirtyWorker.class);
 
-	private static final Pattern A_HREF_PATTERN = Pattern.compile(".*<a.*href=\"([^\"]+view_video[^\"]+)\"[^>]*>.*");
-	private static final Pattern VIDEO_SRC_PATTERN = Pattern.compile(".*<video.*html5.*src=\"([^\"]+mp4[^\"]+)\"[^>]*>.*");
+	private static final Pattern PORNHUB_A_HREF_PATTERN = Pattern.compile(".*<a.*href=\"([^\"]+view_video[^\"]+)\"[^>]*>.*");
+	private static final Pattern PORNHUB_VIDEO_SRC_MP4_PATTERN = Pattern.compile(".*<video[^>]*html5[^>]*src=\"([^\"]+mp4[^\"]*)\"[^>]*>.*");
+	private static final Pattern REDTUBE_VIDEO_SRC_MP4_PATTERN = Pattern.compile(".*<video[^>]*src=\"([^\"]+mp4[^\"]*)\"[^>]*html5[^>]*>.*");
+	private static final Pattern XHAMSTER_A_DOWNLOAD_MP4_PATTERN = Pattern.compile(".*<a[^>]*download[^>]*href=\"([^\"]+mp4[^\"]*)\"[^>]*>.*");
+	private static final Pattern XHAMSTER_A_PLAY_MP4_PATTERN = Pattern.compile(".*<a[^>]*play[^>]*href=\"([^\"]+mp4[^\"]*)\"[^>]*>.*");
+	
 	public static final int PJS_TIMEOUT = 60 * 1000;
 
 	private DirtyManager dirtyManager;
@@ -61,34 +65,19 @@ public class DirtyWorker implements Runnable {
 		try {
 
 			log.info("{} -> {}", id, url);
-			// find real video url
-			if (url.contains("/embed")) {
-				url = findVideoPageUrl();
-				log.info("{} -> {}", id, url);
+			
+			String videoUrl;
+			if (url.contains("pornhub")) {
+				videoUrl = getVideoUrlFromPornhub();
+			} else if (url.contains("xhamster")) {
+				videoUrl = getVideoUrlFromXhamster();
+			} else if (url.contains("redtube")) {
+				videoUrl = getVideoUrlFromRedtube();
+			} else {
+				throw new Exception("Unknown source"); 
 			}
 			
-			ShellExecutor shellExecutor = new ShellExecutor();
-			List<String> command = new ArrayList<String>();
-			command.add(config.getPhantomJsLocation());
-			command.add(config.getRelayJsLocation());
-			command.add(url);
-			command.add(config.getClientTimeout()+"");
 			
-			log.debug("Calling {}", command.toString());
-			String pageContent = shellExecutor.executeCommandLine(command.toArray(new String[]{}), PJS_TIMEOUT);
-			if (StringUtils.nullOrEmpty(pageContent)) {
-				throw new Exception("Empty content");
-			}
-
-			Matcher m = VIDEO_SRC_PATTERN.matcher(pageContent);
-			if (!m.find()) {
-				if (pageContent.contains("<video")) {
-					throw new Exception("Invalid <video> tag");
-				}
-				throw new VideoRemovedException();
-			}
-
-			String videoUrl = StringEscapeUtils.unescapeHtml(m.group(1));
 			File mp4File = new File(config.getDestination(), PathUtils.generatePath("video", id, ".mp4"));
 			mp4File.getParentFile().mkdirs();
 
@@ -119,21 +108,6 @@ public class DirtyWorker implements Runnable {
 		dirtyManager.saveOrUpdate(videoFile);
 	}
 
-	private String findVideoPageUrl() throws Exception {
-		byte[] embedBytes = HttpUtils.getUrl(url, httpClientProvider);
-		String embedPage = new String(embedBytes, "UTF-8");
-
-		Matcher m = A_HREF_PATTERN.matcher(embedPage);
-		if (m.find()) {
-			return m.group(1);
-		}
-		if (embedPage.contains("pornhub")) {
-			throw new VideoRemovedException();
-		}
-		throw new Exception("Invalid response");
-	}
-
-
 	private int createThumbnails(File videoFile) throws Exception {
 		log.info("Creating thumbnails for video {}", videoFile.getName());
 		FfmpegFormat ffmpegFormat = ffmpeg.getFormat(videoFile.getCanonicalPath());
@@ -158,4 +132,84 @@ public class DirtyWorker implements Runnable {
 		return 0;
 	}
 
+	
+	private String getVideoUrlFromPornhub() throws Exception {
+		// find real video url
+		if (url.contains("/embed")) {
+
+			byte[] embedBytes = HttpUtils.getUrl(url, httpClientProvider);
+			String embedPage = new String(embedBytes, "UTF-8");
+
+			Matcher m = PORNHUB_A_HREF_PATTERN.matcher(embedPage);
+			if (m.find()) {
+				url = m.group(1);
+			} else if (embedPage.contains("pornhub")) {
+				throw new VideoRemovedException();
+			} else {
+				throw new Exception("Invalid response");			
+			}
+			log.info("{} -> {}", id, url);			
+		}
+		
+		ShellExecutor shellExecutor = new ShellExecutor();
+		List<String> command = new ArrayList<String>();
+		command.add(config.getPhantomJsLocation());
+		command.add(config.getRelayJsLocation());
+		command.add(url);
+		command.add(config.getClientTimeout()+"");
+		
+		log.debug("Calling {}", command.toString());
+		String pageContent = shellExecutor.executeCommandLine(command.toArray(new String[]{}), PJS_TIMEOUT);
+		if (StringUtils.nullOrEmpty(pageContent)) {
+			throw new Exception("Empty content");
+		}
+
+		Matcher m = PORNHUB_VIDEO_SRC_MP4_PATTERN.matcher(pageContent);
+		if (!m.find()) {
+			if (pageContent.contains("<video")) {
+				throw new Exception("Invalid <video> tag");
+			}
+			throw new VideoRemovedException();
+		}
+
+		return StringEscapeUtils.unescapeHtml(m.group(1));
+		
+	}
+
+	private String getVideoUrlFromXhamster() throws Exception {
+		byte[] pageBytes = HttpUtils.getUrl(url, httpClientProvider);
+		String pageContent = new String(pageBytes, "UTF-8");
+		
+		Matcher m = XHAMSTER_A_DOWNLOAD_MP4_PATTERN.matcher(pageContent);
+		if (m.find()) {
+			return StringEscapeUtils.unescapeHtml(m.group(1));
+		}
+
+		m = XHAMSTER_A_PLAY_MP4_PATTERN.matcher(pageContent);
+		if (m.find()) {
+			return StringEscapeUtils.unescapeHtml(m.group(1));
+		}		
+		
+		if (pageContent.contains("xhamster")) {
+			throw new Exception("Invalid <a> tag");
+		}
+		throw new VideoRemovedException();		
+	}
+
+	private String getVideoUrlFromRedtube() throws Exception {
+		byte[] pageBytes = HttpUtils.getUrl(url, httpClientProvider);
+		String pageContent = new String(pageBytes, "UTF-8");
+		
+		Matcher m = REDTUBE_VIDEO_SRC_MP4_PATTERN.matcher(pageContent);
+		if (!m.find()) {
+			if (pageContent.contains("<video")) {
+				throw new Exception("Invalid <video> tag");
+			}
+			throw new VideoRemovedException();
+		}
+
+		return StringEscapeUtils.unescapeHtml(m.group(1));		
+		
+	}	
+	
 }
